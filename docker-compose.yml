@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: angadia_mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin_password
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: angadia_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MONGODB_URI=mongodb://admin:admin_password@mongodb:27017/angadia_db?authSource=admin
+      - JWT_SECRET=098f6bcd4621d373cade4e832627b4f6098f6bcd4621d373cade4e832627b4f6
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+    networks:
+      - default
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: angadia_frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - default
+
+volumes:
+  mongo_data:

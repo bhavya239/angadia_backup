@@ -1,0 +1,50 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Angadia Pedhi — Render Deployment (Spring Boot Backend via Docker)
+#
+# WHY RENDER, NOT VERCEL?
+#   Vercel runs Node.js / Edge serverless only — Java/Spring Boot cannot run there.
+#   Render supports Docker, which lets us run the Spring Boot JAR.
+#
+# SETUP STEPS:
+#   1. Push this repo to GitHub
+#   2. Go to https://render.com → New → Web Service → Connect your repo
+#   3. Set Root Directory to: backend
+#   4. Set Environment to: Docker
+#   5. Add environment variables below in the Render dashboard
+#   6. Deploy — Render will build the Docker image and start the service
+# ─────────────────────────────────────────────────────────────────────────────
+services:
+  - type: web
+    name: angadia-backend
+    runtime: docker
+    region: singapore          # Closest to India
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /actuator/health
+    envVars:
+      # ── MongoDB Atlas ──────────────────────────────────────────────────────
+      # IMPORTANT: The $ in the password must be URL-encoded as %24
+      # Paste this exact value (with %24) in the Render dashboard:
+      #   mongodb+srv://bhavya2939_db_user:UPRsD4wMA2K3Hv%24@angadia.oe3ivh5.mongodb.net/?appName=Angadia
+      - key: MONGODB_URI
+        sync: false            # Set manually in Render dashboard — never commit
+
+      # ── JWT Security ───────────────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true    # Render auto-generates a secure random value
+
+      # ── Spring Profile ─────────────────────────────────────────────────────
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+      # ── CORS ───────────────────────────────────────────────────────────────
+      # Set this AFTER your Vercel frontend is deployed.
+      # Example: https://angadia-pedhi.vercel.app
+      # Multiple origins: https://angadia-pedhi.vercel.app,https://www.angadiapedhi.com
+      - key: ALLOWED_ORIGINS
+        value: https://frontend-seven-psi-54.vercel.app
+
+      # ── Server port (Render uses 10000 by default for Docker) ──────────────
+      - key: SERVER_PORT
+        value: 8080

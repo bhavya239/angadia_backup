@@ -1,0 +1,103 @@
+# ==========================================
+#  Angadia Pedhi — Application Configuration
+# ==========================================
+
+spring:
+  application:
+    name: angadia-backend
+
+  # ---- MongoDB ----
+  data:
+    mongodb:
+      # Prefer MONGODB_URI (Atlas / cloud). Spring also accepts SPRING_DATA_MONGODB_URI.
+      uri: ${MONGODB_URI:${MONGO_URI:mongodb://angadia_user:angadia_pass_dev@localhost:27017/angadia_dev?authSource=angadia_dev}}
+      auto-index-creation: false   # We manage indexes manually in MongoConfig
+
+  # ---- Jackson ----
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+    time-zone: Asia/Kolkata
+
+server:
+  port: ${SERVER_PORT:${PORT:8080}}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/plain
+
+# ---- App Custom Properties ----
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-this-to-a-very-long-secret-key-minimum-256-bits-for-hs256-algorithm}
+    access-token-expiry-ms: 900000        # 15 minutes
+    refresh-token-expiry-days: 7
+  cors:
+    # Local dev + Vercel production + Vercel preview URLs
+    # After deploying, add your actual Vercel URL here via ALLOWED_ORIGINS env var on Render
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+  rate-limit:
+    login-capacity: 5
+    login-refill-minutes: 15
+    api-capacity: 200
+    api-refill-minutes: 1
+
+# ---- Actuator ----
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ---- Logging ----
+logging:
+  level:
+    root: INFO
+    com.angadia: DEBUG
+    org.springframework.security: INFO
+    org.springframework.data.mongodb: INFO
+
+# ---- OpenAPI / Swagger ----
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+---
+# ==========================================
+#  PROFILE: test
+# ==========================================
+spring:
+  config:
+    activate:
+      on-profile: test
+  data:
+    mongodb:
+      # Flapdoodle embedded MongoDB takes over — no URI needed
+      auto-index-creation: true
+logging:
+  level:
+    com.angadia: DEBUG
+
+---
+# ==========================================
+#  PROFILE: prod
+# ==========================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    root: WARN
+    com.angadia: INFO
+  pattern:
+    console: '{"timestamp":"%d{ISO8601}","level":"%p","logger":"%logger","message":"%m"}%n'
