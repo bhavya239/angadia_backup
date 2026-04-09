@@ -45,6 +45,6 @@ services:
       - key: ALLOWED_ORIGINS
         value: https://frontend-seven-psi-54.vercel.app
 
-      # ── Server port (Render uses 10000 by default for Docker) ──────────────
-      - key: SERVER_PORT
-        value: 8080
+      # NOTE:
+      # Do not set SERVER_PORT on Render Docker services.
+      # Render injects PORT and the app reads it via `server.port: ${PORT:8080}`.
